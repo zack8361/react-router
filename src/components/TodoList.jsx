@@ -4,7 +4,10 @@ import { useDispatch, useSelector } from 'react-redux';
 import { create, done } from '../store/modules/todo';
 
 export default function TodoList() {
-  const todoList = useSelector((state) => state.todo.todoList);
+  const todoList = useSelector((state) => state.todo.todoList).filter(
+    (el) => el.done === false
+  );
+  const nextID = useSelector((state) => state.todo.nextID);
   const dispatch = useDispatch();
   const inputEl = useRef();
   return (
@@ -12,9 +15,7 @@ export default function TodoList() {
       <input type="text" ref={inputEl} />
       <button
         onClick={() => {
-          dispatch(
-            create({ id: todoList.length, text: inputEl.current.value })
-          );
+          dispatch(create({ id: nextID, text: inputEl.current.value }));
           inputEl.current.value = '';
         }}
       >
@@ -22,7 +23,12 @@ export default function TodoList() {
       </button>
       <ul>
         {todoList.map((el) => {
-          return <li key={el.id}>{el.text}</li>;
+          return (
+            <li key={el.id}>
+              {el.text}
+              <button onClick={() => dispatch(done(el.id))}>완료</button>
+            </li>
+          );
         })}
       </ul>
     </div>
