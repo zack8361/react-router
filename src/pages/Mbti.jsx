@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import styled from 'styled-components';
 import SkyblueButton from '../pages/SkyblueButton';
 import { next } from '../store/modules/mbti';
+import { check } from '../store/modules/mbti';
 import Progress from './Progress';
 const SurveyQuestion = styled.p`
   font-size: 1.5em;
@@ -26,7 +27,10 @@ export default function Mbti() {
             <li key={index}>
               <SkyblueButton
                 text={el.text}
-                clickEvent={() => dispatch(next())}
+                clickEvent={() => {
+                  dispatch(check(el.result));
+                  dispatch(next());
+                }}
               />
               {index == 0 && <Vs>VS</Vs>}
             </li>

@@ -1,4 +1,4 @@
-// mbti 빈함수 export -> combine 으로 합쳐놓기 위해서.
+const mongoClient = require('./mongoConnect');
 
 const initState = {
   mbtiResult: '',
@@ -129,72 +129,59 @@ const initState = {
   },
 };
 
-const initStateEmpty = {
-  mbtiResult: '',
-  page: 0,
-  survey: [],
-  explanation: {},
-};
-// action- type 설정
-const INIT = 'mbti/INIT';
-const CHECK = 'mbti/CHECK';
-const NEXT = 'mbti/NEXT';
-const RESET = 'mbti/RESET';
-
-export function init(data) {
-  return {
-    type: INIT,
-    payload: data,
-  };
-}
-
-//Action 생성 함수 설정
-export function check(result) {
-  return {
-    type: CHECK,
-    payload: { result },
-  };
-}
-
-export function next(result) {
-  return {
-    type: NEXT,
-  };
-}
-
-export function reset(result) {
-  return {
-    type: RESET,
-  };
-}
-
-export default function mbti(state = initStateEmpty, action) {
-  switch (action.type) {
-    case INIT:
-      return {
-        ...state,
-        survey: action.payload.survey,
-        explanation: action.payload.explanation,
-      };
-
-    case CHECK:
-      return {
-        ...state,
-        mbtiResult: state.mbtiResult + action.payload.result,
-      };
-
-    case NEXT:
-      return {
-        ...state,
-        page: state.page + 1,
-      };
-    case RESET:
-      return {
-        ...state,
-        page: 0,
-        mbtiResult: '',
-      };
-    default:
-      return state;
+const setData = async (req, res) => {
+  try {
+    const client = await mongoClient.connect();
+    const data = client.db('mbti').collection('data'); // 있으면 가고 없으면 data 라는 테이블을 만들어라.
+    await data.insertOne(initState); // 객체를 통으로 넣어라
+    res.status(200).json('데이터 추가 성공');
+  } catch (error) {
+    console.error(error);
+    res.status(500).json('데이터 삽입 실패, 알수 없는 문제 발생 찡꼴라');
   }
-}
+};
+
+// Redux 데이터를 가지고 오는 컨트롤러
+const getData = async (req, res) => {
+  try {
+    const client = await mongoClient.connect();
+    const data = client.db('mbti').collection('data'); // 있으면 가고 없으면 data 라는 테이블을 만들어라.
+    const mbtiData = await data.find({}).toArray();
+    res.status(200).json(mbtiData);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json('데이터 삽입 실패, 알수 없는 문제 발생 찡꼴라');
+  }
+};
+
+const getCounts = async (req, res) => {
+  try {
+    const client = await mongoClient.connect();
+    const data = client.db('mbti').collection('counts'); // 있으면 가고 없으면 data 라는 테이블을 만들어라.
+    const counts = await data.findOne({ id: 1 });
+    res.status(200).json(counts);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json('데이터 삽입 실패, 알수 없는 문제 발생 찡꼴라');
+  }
+};
+
+// 방문자 수를 1증가시켜줌
+const plusCounts = async (req, res) => {
+  try {
+    const client = await mongoClient.connect();
+    const data = client.db('mbti').collection('counts'); // 있으면 가고 없으면 data 라는 테이블을 만들어라.
+    const counts = await data.updateOne({ id: 1 }, { $inc: { counts: +1 } });
+    res.status(200).json('방문자 수 업데이트 성공');
+  } catch (error) {
+    console.error(error);
+    res.status(500).json('데이터 삽입 실패, 알수 없는 문제 발생 찡꼴라');
+  }
+};
+
+module.exports = {
+  setData,
+  getData,
+  getCounts,
+  plusCounts,
+};
